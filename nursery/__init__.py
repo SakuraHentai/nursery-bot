@@ -6,7 +6,7 @@ from nursery.modules.shot import appShot
 def start():
     appInfo = appShot()
     chessboard = ocr()
-    if chessboard:
+    if chessboard.size > 0:
         auto(appInfo, chessboard)
     else:
         print("No chessboard found")

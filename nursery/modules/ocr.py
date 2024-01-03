@@ -72,6 +72,6 @@ def ocr():
         matrix = np.reshape(numbers, (16, 10))
     except:
         print("OCR seems to have failed")
-        return
+        return np.array([])
 
     return matrix
