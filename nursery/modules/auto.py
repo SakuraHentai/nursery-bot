@@ -25,10 +25,8 @@ def _getMousePosByGridPos(appInfo, gridPos, needOffset=False):
     )
 
     if needOffset:
-        # Add a small random value with gap
-        # Confirm it's in the cell
-        mouseX += randint(int(scaledGridGap / 2), int(scaledGridGap))
-        mouseY += randint(int(scaledGridGap / 2), int(scaledGridGap))
+        mouseX += int(scaledGridSize / 2)
+        mouseY += int(scaledGridSize / 2)
 
     return [mouseX, mouseY]
 
@@ -109,8 +107,10 @@ def _processTask(appInfo, taskQueue):
         try:
             task = taskQueue.get(block=False)
             fromCell, toCell = task
-            fromPos = _getMousePosByGridPos(appInfo, fromCell, True)
+            fromPos = _getMousePosByGridPos(appInfo, fromCell)
+            # Add offset to make sure across the cell
             toPos = _getMousePosByGridPos(appInfo, toCell, True)
+
             print("fromCell", fromCell, "toCell", toCell)
             print("Drag from %s to %s" % (fromPos, toPos))
             pyautogui.moveTo(fromPos)

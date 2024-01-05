@@ -51,14 +51,31 @@ def ocr():
                 x, y, w, h = 0, 0, number.shape[1], number.shape[0]
 
                 # Center the number
-                offset = int(((config.GRID_SIZE - 18) / 2) * scale)
+                offset = int(((config.GRID_SIZE - 20) / 2) * scale)
                 number = number[
                     y + offset : y + h - offset, x + offset : x + w - offset
                 ]
+
+                # Resize to same dims
+                number = cv2.resize(
+                    number,
+                    (
+                        int(config.GRID_SIZE / 1.8 * scale),
+                        int(config.GRID_SIZE / 1.8 * scale),
+                    ),
+                )
+
+                # Debug numbers
+                # cv2.imshow("number", number)
+                # cv2.waitKey(0)
+
                 numbers.append(number)
 
-    # Concat into one img
-    numbers = cv2.hconcat(numbers)
+    if len(numbers) > 0:
+        # Concat into one img
+        numbers = cv2.hconcat(numbers)
+    else:
+        raise Exception("No numbers detected")
 
     # Ocr it
     numbers = pytesseract.image_to_string(
