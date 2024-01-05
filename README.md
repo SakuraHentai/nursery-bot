@@ -2,8 +2,9 @@
 
 ### 准备
 
-1. 安装 [Python3.8+](https://www.python.org/downloads/), [Tesseract](https://github.com/tesseract-ocr/tesseract?tab=readme-ov-file#installing-tesseract)
-2. 安装依赖 `pip install -r requirements.txt`
+1. 安装 [Python3.8+](https://www.python.org/downloads/)
+2. 安装 [Tesseract](https://github.com/tesseract-ocr/tesseract?tab=readme-ov-file#installing-tesseract) , 安装后需要手动设定 PATH , 前往控制面板 - 系统 - 高级系统设置 - 环境变量 - 新建并添加你的安装目录
+3. 安装依赖 `pip install -r requirements.txt`
 
 ### 使用
 
