@@ -1,7 +1,6 @@
 import signal
 import time
 from multiprocessing import Process, Queue, active_children
-from random import randint
 
 import pyautogui
 
@@ -37,11 +36,15 @@ def _queueTask(chessboard, taskQueue):
     TARGET_SUM = 10
 
     # Search surrounding level
-    level = 1
+    surroundingLevel = 1
     found = False
     try:
         while True:
-            print(f"loop level: {level} ============================")
+            # The chessboard is 16x10
+            # So, if the level reach it, we stop
+            if surroundingLevel > 16:
+                break
+
             # We no need the right bottom edge
             for i in range(0, row):
                 for j in range(0, col):
@@ -55,18 +58,16 @@ def _queueTask(chessboard, taskQueue):
                     found = False
                     nums = [center]
                     # We search items from 3 o'clock, clockwise
-                    for l in range(1, level + 1):
-                        if j + l < col:
-                            next = chessboard[i][j + l]
-                            # if next == 0:
-                            #     continue
-
+                    for level in range(1, surroundingLevel + 1):
+                        if j + level < col:
+                            next = chessboard[i][j + level]
                             nums.append(next)
 
                             if sum(nums) == TARGET_SUM:
-                                taskQueue.put(([i, j], [i, j + l]), False)
-                                # empty it
-                                for clean in range(0, l + 1):
+                                taskQueue.put(([i, j], [i, j + level]), False)
+
+                                # Empty it
+                                for clean in range(0, level + 1):
                                     chessboard[i][j + clean] = 0
                                 found = True
                                 break
@@ -78,34 +79,37 @@ def _queueTask(chessboard, taskQueue):
 
                     nums = [center]
                     # Search 6 o'clock
-                    for l in range(1, level + 1):
-                        if i + l < row:
-                            next = chessboard[i + l][j]
-                            # if next == 0:
-                            #     continue
-
+                    for level in range(1, surroundingLevel + 1):
+                        if i + level < row:
+                            next = chessboard[i + level][j]
                             nums.append(next)
 
                             if sum(nums) == TARGET_SUM:
-                                taskQueue.put(([i, j], [i + l, j]), False)
-                                # empty it
-                                for clean in range(0, l + 1):
+                                taskQueue.put(([i, j], [i + level, j]), False)
+
+                                # Empty it
+                                for clean in range(0, level + 1):
                                     chessboard[i + clean][j] = 0
                                 break
                             if sum(nums) > TARGET_SUM:
                                 break
 
-            # wait for next loop
-            level += 1
+            # Wait for next loop
+            surroundingLevel += 1
             time.sleep(1)
-    except:
+    except:  # noqa: E722
         pass
 
 
 def _processTask(appInfo, taskQueue):
+    # B'z the task data is much more faster then the gui
+    # So it just works, lol
+    guiStarted = False
     while True:
         try:
             task = taskQueue.get(block=False)
+            guiStarted = True
+
             fromCell, toCell = task
             fromPos = _getMousePosByGridPos(appInfo, fromCell)
             # Add offset to make sure across the cell
@@ -116,8 +120,10 @@ def _processTask(appInfo, taskQueue):
             pyautogui.moveTo(fromPos)
             time.sleep(0.06)
             pyautogui.dragTo(toPos, duration=0.3)
-        except:
-            pass
+        except:  # noqa: E722
+            # Done all tasks.
+            if guiStarted:
+                break
 
 
 def _stopProcess(signal, frame):
@@ -134,12 +140,13 @@ def auto(appInfo, matrix):
 
     taskQueue = Queue()
     proc = []
-    # queue 10's it
+
+    # Queue 10's
     queueTask = Process(target=_queueTask, args=(chessboard, taskQueue))
     queueTask.start()
     proc.append(queueTask)
 
-    # bot it
+    # Bot it
     processTask = Process(
         target=_processTask,
         args=(
@@ -150,7 +157,7 @@ def auto(appInfo, matrix):
     processTask.start()
     proc.append(processTask)
 
-    # signals for kill process
+    # Signals for Ctl-C
     signal.signal(signal.SIGINT, _stopProcess)
 
     for p in proc:

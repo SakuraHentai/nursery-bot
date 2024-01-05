@@ -87,7 +87,7 @@ def ocr():
         numbers = np.array([int(i) for i in list(numbers.strip())])
         numbers = np.flip(numbers)
         matrix = np.reshape(numbers, (16, 10))
-    except:
+    except:  # noqa: E722
         print("OCR seems to have failed")
         return np.array([])
 
