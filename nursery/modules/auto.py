@@ -44,7 +44,7 @@ def _queueTask(chessboard, taskQueue):
             print(f"loop level: {level} ============================")
             # We no need the right bottom edge
             for i in range(0, row):
-                for j in range(0, col - 1):
+                for j in range(0, col):
                     center = chessboard[i][j]
 
                     # Check it variable
