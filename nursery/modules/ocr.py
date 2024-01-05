@@ -79,7 +79,7 @@ def ocr():
 
     # Ocr it
     numbers = pytesseract.image_to_string(
-        numbers, config='--psm 6 digits -c tessedit_char_whitelist="123456789"'
+        numbers, config='--psm 7 digits -c tessedit_char_whitelist="123456789"'
     )
 
     try:
