@@ -2,6 +2,7 @@ import signal
 import time
 from multiprocessing import Process, Queue, active_children
 
+import numpy as np
 import pyautogui
 
 from nursery.modules.config import GRID_GAP, GRID_SIZE, OFFSET_TOP, OFFSET_X
@@ -37,7 +38,6 @@ def _queueTask(chessboard, taskQueue):
 
     # Search surrounding level
     surroundingLevel = 1
-    found = False
     try:
         while True:
             # The chessboard is 16x10
@@ -48,51 +48,40 @@ def _queueTask(chessboard, taskQueue):
             # We no need the right bottom edge
             for i in range(0, row):
                 for j in range(0, col):
-                    center = chessboard[i][j]
-
                     # Check it variable
-                    if center == 0:
+                    if chessboard[i][j] == 0:
                         continue
 
-                    # Reset found flag
-                    found = False
-                    nums = [center]
-                    # We search items from 3 o'clock, clockwise
-                    for level in range(1, surroundingLevel + 1):
-                        if j + level < col:
-                            next = chessboard[i][j + level]
-                            nums.append(next)
+                    # Search for a rectangle
+                    for column in range(0, surroundingLevel + 1):
+                        # Record whether found is used to jump out of the loop
+                        found = False
+                        for rowI in range(0, surroundingLevel + 1):
+                            if j + column < col and i + rowI < row:
+                                # Skip the 1*1 rectangle
+                                if rowI == 0 and column == 0:
+                                    continue
+                                rr = i + rowI
+                                cc = j + column
+                                # Rectangular numpy array
+                                children = chessboard[i:rr+1, j:cc+1]
+                                sum = np.sum(children)
 
-                            if sum(nums) == TARGET_SUM:
-                                taskQueue.put(([i, j], [i, j + level]), False)
+                                if sum == TARGET_SUM:
+                                    target = ([i, j], [rr, cc])
+                                    print('Find the target:', target, ' Rectangle: ', children)
+                                    # Clean the rectangular
+                                    for cR in range(i, rr + 1):
+                                        for rR in range(j, cc + 1):
+                                            chessboard[cR][rR] = 0
+                                    taskQueue.put(target, False)
+                                    found = True
+                                    break
+                                if sum > TARGET_SUM:
+                                    break
 
-                                # Empty it
-                                for clean in range(0, level + 1):
-                                    chessboard[i][j + clean] = 0
-                                found = True
-                                break
-                            if sum(nums) > TARGET_SUM:
-                                break
-
-                    if found:
-                        continue
-
-                    nums = [center]
-                    # Search 6 o'clock
-                    for level in range(1, surroundingLevel + 1):
-                        if i + level < row:
-                            next = chessboard[i + level][j]
-                            nums.append(next)
-
-                            if sum(nums) == TARGET_SUM:
-                                taskQueue.put(([i, j], [i + level, j]), False)
-
-                                # Empty it
-                                for clean in range(0, level + 1):
-                                    chessboard[i + clean][j] = 0
-                                break
-                            if sum(nums) > TARGET_SUM:
-                                break
+                        if found:
+                            break
 
             # Wait for next loop
             surroundingLevel += 1
