@@ -41,8 +41,8 @@ def ocr():
         x, y, w, h = cv2.boundingRect(contour)
 
         # Check it's a cell
-        cellMinSize = config.GRID_SIZE * 0.9 * scale
-        cellMaxSize = config.GRID_SIZE * 1.1 * scale
+        cellMinSize = config.GRID_SIZE * 0.8 * scale
+        cellMaxSize = config.GRID_SIZE * 1.2 * scale
         if w > cellMinSize and h > cellMinSize and w < cellMaxSize and h < cellMaxSize:
             # Crop the rectangular contours from the original image
             number = img[y : y + h, x : x + w]
@@ -61,7 +61,8 @@ def ocr():
                     number,
                     (
                         int(config.GRID_SIZE / 1.8 * scale),
-                        int(config.GRID_SIZE / 1.8 * scale),
+                        # Digits always height > width
+                        int(config.GRID_SIZE / 1.2 * scale),
                     ),
                 )
 
@@ -74,6 +75,20 @@ def ocr():
     if len(numbers) > 0:
         # Concat into one img
         numbers = cv2.hconcat(numbers)
+
+        # Convert to white char and black background
+        numbers = cv2.bitwise_not(numbers)
+
+        # Scale up and sharpen
+
+        numbers = cv2.resize(
+            numbers, None, fx=3.0, fy=3.0, interpolation=cv2.INTER_LINEAR
+        )
+        sharpen_kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+
+        numbers = cv2.filter2D(numbers, -1, sharpen_kernel)
+        # cv2.imshow("numbers", numbers)
+        # cv2.waitKey(0)
     else:
         raise Exception("No numbers detected")
 
